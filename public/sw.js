@@ -18,6 +18,9 @@ self.addEventListener('install', (event) => {
             .then((cache) => {
                 console.log('Precaching App Shell')
                 // Think about these as requests and NOT urls
+                // add() and addAll() takes in url and automatically sends a 
+                // request and automically stores the response as a key-value
+                // pair
                 cache.addAll([
                     '/',
                     '/index.html',
@@ -55,6 +58,17 @@ self.addEventListener('fetch', (event) => {
                     return response
                 else
                     return fetch(event.request)
+                        .then(response => {
+                            return caches.open('dynamic')
+                                .then(cache => {
+                                    // put() requires you to put a key-value pair 
+                                    // manually
+                                    // Can only consume the response once, so we
+                                    // need to use clone()
+                                    cache.put(event.request.url, response.clone())
+                                    return response
+                                })
+                        })
             })
     )
 })
