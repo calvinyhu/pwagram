@@ -1,29 +1,31 @@
 // Check if browser supports Promises, if it doesn't add the polyfill for it
 if (!window.Promise) {
-  window.Promise = Promise
+  window.Promise = Promise;
 }
 
-let deferredPrompt = null
+let deferredPrompt = null;
 
 // Check if browser supports service workers
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
+  navigator.serviceWorker
+    .register('/sw.js')
     .then(() => {
-      console.log('Service worker registered!')
-    }).catch((error) => {
-      console.log(error)
+      console.log('Service worker registered!');
     })
+    .catch(error => {
+      console.log(error);
+    });
 }
 
-window.addEventListener('beforeinstallprompt', (event) => {
+window.addEventListener('beforeinstallprompt', event => {
   // Prevent chrome from showing the banner
-  console.log('beforeinstallprompt fired')
-  event.preventDefault()
-  deferredPrompt = event
-  return false
-})
+  console.log('beforeinstallprompt fired');
+  event.preventDefault();
+  deferredPrompt = event;
+  return false;
+});
 
-// This promise takes in a function (named or anonymous) which takes in two 
+// This promise takes in a function (named or anonymous) which takes in two
 // additional functions that indicate a resolve() or reject()
 // const promise = new Promise((resolve, reject) => {
 //     setTimeout(() => {
@@ -93,7 +95,7 @@ window.addEventListener('beforeinstallprompt', (event) => {
 
 // Below is a cleaner, more readable version of the above
 // catch() will catch any errors above where it is called
-// If a catch() is at the bottom, we are handling any errors of the promise 
+// If a catch() is at the bottom, we are handling any errors of the promise
 // chain
 // promise.then((text) => {
 //     return text
