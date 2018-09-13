@@ -1,4 +1,5 @@
 importScripts('/src/js/idb.js');
+importScripts('/src/js/utility.js');
 
 const CACHE_STATIC_NAME = 'static-v1';
 const CACHE_DYNAMIC_NAME = 'dynamic-v1';
@@ -20,11 +21,6 @@ const STATIC_FILES = [
   'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css'
 ];
 const URL = 'https://pwagramu.firebaseio.com/posts';
-
-const dbPromise = idb.open('posts-store', 1, db => {
-  if (!db.objectStoreNames.contains('posts'))
-    db.createObjectStore('posts', { keyPath: 'id' });
-});
 
 trimCache = (cacheName, maxItems) => {
   caches.open(cacheName).then(cache => {
@@ -85,16 +81,13 @@ cacheThenNetwork = event => {
   event.respondWith(
     fetch(event.request).then(response => {
       const clonedResponse = response.clone();
-      clonedResponse.json().then(data => {
-        for (let key in data) {
-          dbPromise.then(db => {
-            const tx = db.transaction('posts', 'readwrite');
-            const store = tx.objectStore('posts');
-            store.put(data[key]);
-            return tx.complete;
-          });
-        }
-      });
+      clearAllData('posts')
+        .then(() => {
+          return clonedResponse.json();
+        })
+        .then(data => {
+          for (let key in data) writeData('posts', data[key]);
+        });
       return response;
     })
   );
