@@ -55,23 +55,23 @@ function clearCards() {
   }
 }
 
-function createCard() {
+function createCard(data) {
   var cardWrapper = document.createElement('div');
   cardWrapper.className = 'shared-moment-card mdl-card mdl-shadow--2dp';
   var cardTitle = document.createElement('div');
   cardTitle.className = 'mdl-card__title';
-  cardTitle.style.backgroundImage = 'url("/src/images/sf-boat.jpg")';
+  cardTitle.style.backgroundImage = `url('${data.image}')`;
   cardTitle.style.backgroundSize = 'cover';
   cardTitle.style.height = '180px';
   cardWrapper.appendChild(cardTitle);
   var cardTitleTextElement = document.createElement('h2');
   cardTitleTextElement.style.color = 'white';
   cardTitleTextElement.className = 'mdl-card__title-text';
-  cardTitleTextElement.textContent = 'San Francisco Trip';
+  cardTitleTextElement.textContent = data.title;
   cardTitle.appendChild(cardTitleTextElement);
   var cardSupportingText = document.createElement('div');
   cardSupportingText.className = 'mdl-card__supporting-text';
-  cardSupportingText.textContent = 'In San Francisco';
+  cardSupportingText.textContent = `In ${data.location}`;
   cardSupportingText.style.textAlign = 'center';
   // var cardSaveButton = document.createElement('button');
   // cardSaveButton.textContent = 'Save';
@@ -82,27 +82,26 @@ function createCard() {
   sharedMomentsArea.appendChild(cardWrapper);
 }
 
-const url = 'https://httpbin.org/post';
+updateUI = data => {
+  clearCards();
+  data.forEach(data => {
+    createCard(data);
+  });
+};
+
+const url = 'https://pwagramu.firebaseio.com/posts.json';
 let networkDataReceived = false;
 
-fetch(url, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json'
-  },
-  body: JSON.stringify({
-    message: 'Some message'
-  })
-})
+fetch(url)
   .then(res => {
     return res.json();
   })
   .then(data => {
     networkDataReceived = true;
     console.log('From web', data);
-    clearCards();
-    createCard();
+    const dataArray = [];
+    for (let key in data) dataArray.push(data[key]);
+    updateUI(dataArray);
   });
 
 if ('caches' in window) {
@@ -116,8 +115,9 @@ if ('caches' in window) {
     .then(data => {
       console.log('From cache', data);
       if (!networkDataReceived) {
-        clearCards();
-        createCard();
+        const dataArray = [];
+        for (let key in data) dataArray.push(data[key]);
+        updateUI(dataArray);
       }
     });
 }

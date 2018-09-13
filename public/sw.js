@@ -16,7 +16,7 @@ const STATIC_FILES = [
   'https://fonts.googleapis.com/icon?family=Material+Icons',
   'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css'
 ];
-const URL = 'https://httpbin.org/get';
+const URL = 'https://pwagramu.firebaseio.com/posts';
 
 trimCache = (cacheName, maxItems) => {
   caches.open(cacheName).then(cache => {
