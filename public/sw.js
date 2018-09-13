@@ -18,11 +18,20 @@ const STATIC_FILES = [
 ];
 const URL = 'https://httpbin.org/get';
 
+trimCache = (cacheName, maxItems) => {
+  caches.open(cacheName).then(cache => {
+    return cache.keys().then(keys => {
+      if (keys.length > maxItems)
+        cache.delete(keys[0]).then(trimCache(cacheName, maxItems));
+    });
+  });
+};
+
 isInArray = (string, array) => {
   var cachePath;
   if (string.indexOf(self.origin) === 0) {
     // request targets domain where we serve the page from (i.e. NOT a CDN)
-    console.log('matched ', string);
+    // console.log('matched ', string);
     // take the part of the URL AFTER the domain (e.g. after localhost:8080)
     cachePath = string.substring(self.origin.length);
   } else cachePath = string; // store the full request (for CDNs)
@@ -89,7 +98,7 @@ cacheNetworkFallback = event => {
           })
           .catch(error => {
             return caches.open(CACHE_STATIC_NAME).then(cache => {
-              if (event.request.url.indexOf('/help'))
+              if (event.request.headers.get('accept').includes('text/html'))
                 return cache.match('/offline.html');
             });
           });

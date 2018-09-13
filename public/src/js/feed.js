@@ -22,6 +22,13 @@ function openCreatePostModal() {
 
     deferredPrompt = null;
   }
+
+  // Unregister service worker (not where you would unregister it though)
+  // if ('serviceWorker' in navigator) {
+  //   navigator.serviceWorker.getRegistrations().then(registrations => {
+  //     registrations.forEach(reg => reg.unregister());
+  //   });
+  // }
 }
 
 function closeCreatePostModal() {
@@ -75,10 +82,19 @@ function createCard() {
   sharedMomentsArea.appendChild(cardWrapper);
 }
 
-const url = 'https://httpbin.org/get';
-const networkDataReceived = false;
+const url = 'https://httpbin.org/post';
+let networkDataReceived = false;
 
-fetch(url)
+fetch(url, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json'
+  },
+  body: JSON.stringify({
+    message: 'Some message'
+  })
+})
   .then(res => {
     return res.json();
   })
