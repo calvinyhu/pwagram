@@ -93,6 +93,64 @@ self.addEventListener('sync', event => {
   }
 });
 
+self.addEventListener('notificationclick', event => {
+  const notification = event.notification;
+  const action = event.action;
+
+  console.log(notification);
+
+  if (action === 'confirm') {
+    console.log('Confirm was chosen');
+    notification.close();
+  } else {
+    console.log(action);
+    event.waitUntil(
+      clients.matchAll().then(allClients => {
+        const client = allClients.find(c => {
+          return c.visibilityState === 'visible';
+        });
+
+        // Do somehting different based on whether or not the app was open on the
+        // client device
+        if (client !== undefined) {
+          client.navigate(notification.data.url);
+          client.focus();
+        } else {
+          clients.openWindow(notification.data.url);
+        }
+      })
+    );
+    notification.close();
+  }
+});
+
+self.addEventListener('notificationclose', event => {
+  console.log('notification was closed');
+});
+
+self.addEventListener('push', event => {
+  console.log('Push notification received', event);
+
+  let data = {
+    title: 'New!',
+    content: 'Something new happened!',
+    openUrl: '/'
+  };
+
+  if (event.data) data = JSON.parse(event.data.text());
+
+  const options = {
+    body: data.content,
+    icon: '/src/images/icons/app-icon-96x96.png',
+    badge: '/src/images/icons/app-icon-96x96.png',
+    data: {
+      url: data.openUrl
+    }
+  };
+
+  event.waitUntil(self.registration.showNotification(data.title, options));
+});
+
 sendData = data => {
   fetch('https://us-central1-pwagramu.cloudfunctions.net/storePostData', {
     method: 'POST',
