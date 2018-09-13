@@ -4,6 +4,9 @@ var closeCreatePostModalButton = document.querySelector(
   '#close-create-post-modal-btn'
 );
 var sharedMomentsArea = document.querySelector('#shared-moments');
+var form = document.querySelector('form');
+var titleInput = document.querySelector('#title');
+var locationInput = document.querySelector('#location');
 
 function openCreatePostModal() {
   createPostArea.style.transform = 'translateY(0)';
@@ -112,3 +115,62 @@ if ('indexedDB' in window) {
     }
   });
 }
+
+form.addEventListener('submit', () => submitForm(event));
+
+submitForm = event => {
+  event.preventDefault();
+  console.log('submitting form');
+
+  if (titleInput.value.trim() === '' || locationInput.value.trim() === '') {
+    alert('Please enter valid data!');
+    return;
+  }
+
+  closeCreatePostModal();
+
+  // Check for background sync and sync, else send data directly to backend
+  if ('serviceWorker' in navigator && 'SyncManager' in window) {
+    navigator.serviceWorker.ready.then(sw => {
+      const post = {
+        id: new Date().toISOString(),
+        title: titleInput.value,
+        location: locationInput.value
+      };
+      writeData('sync-posts', post)
+        .then(() => {
+          return sw.sync.register('sync-new-posts');
+        })
+        .then(() => {
+          const snackbarContainer = document.querySelector(
+            '#confirmation-toast'
+          );
+          const data = { message: 'Your post was saved for syncing!' };
+          snackbarContainer.MaterialSnackbar.showSnackbar(data);
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    });
+  } else sendData();
+};
+
+sendData = () => {
+  fetch('https://us-central1-pwagramu.cloudfunctions.net/storePostData', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    body: JSON.stringify({
+      id: new Date().toISOString(),
+      title: titleInput.value,
+      location: locationInput.value,
+      image:
+        'https://firebasestorage.googleapis.com/v0/b/pwagramu.appspot.com/o/sf-boat.jpg?alt=media&token=0da3007e-9ca4-4bd2-9e8e-47f85d4e64ec'
+    })
+  }).then(response => {
+    console.log('Sent data', response);
+    updateUI();
+  });
+};

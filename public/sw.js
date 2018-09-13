@@ -77,6 +77,50 @@ self.addEventListener('fetch', event => {
   else cacheNetworkFallback(event);
 });
 
+// Fired whenever service worker regains internet connection
+self.addEventListener('sync', event => {
+  console.log('Background syncing', event);
+
+  // Handling different tags
+  switch (event.tag) {
+    case 'sync-new-posts':
+      console.log('Syncing new posts');
+      event.waitUntil(
+        readAllData('sync-posts').then(data => {
+          for (let dt of data) sendData(dt);
+        })
+      );
+  }
+});
+
+sendData = data => {
+  fetch('https://us-central1-pwagramu.cloudfunctions.net/storePostData', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json'
+    },
+    body: JSON.stringify({
+      id: data.id,
+      title: data.title,
+      location: data.location,
+      image:
+        'https://firebasestorage.googleapis.com/v0/b/pwagramu.appspot.com/o/sf-boat.jpg?alt=media&token=0da3007e-9ca4-4bd2-9e8e-47f85d4e64ec'
+    })
+  })
+    .then(response => {
+      console.log('Sent data on reconnection', response);
+      if (response.ok) {
+        response.json().then(resData => {
+          deleteItemFromData('sync-posts', resData.id);
+        });
+      }
+    })
+    .catch(error => {
+      console.log('Error while sending data on reconnection', error);
+    });
+};
+
 cacheThenNetwork = event => {
   event.respondWith(
     fetch(event.request).then(response => {
