@@ -1,5 +1,5 @@
-const CACHE_STATIC_NAME = 'static-v13';
-const CACHE_DYNAMIC_NAME = 'dynamic-v2';
+const CACHE_STATIC_NAME = 'static-v1';
+const CACHE_DYNAMIC_NAME = 'dynamic-v1';
 const STATIC_FILES = [
   '/',
   '/index.html',
@@ -19,10 +19,14 @@ const STATIC_FILES = [
 const URL = 'https://httpbin.org/get';
 
 isInArray = (string, array) => {
-  array.forEaach(e => {
-    if (string === e) return true;
-  });
-  return false;
+  var cachePath;
+  if (string.indexOf(self.origin) === 0) {
+    // request targets domain where we serve the page from (i.e. NOT a CDN)
+    console.log('matched ', string);
+    // take the part of the URL AFTER the domain (e.g. after localhost:8080)
+    cachePath = string.substring(self.origin.length);
+  } else cachePath = string; // store the full request (for CDNs)
+  return array.indexOf(cachePath) > -1;
 };
 
 self.addEventListener('install', event => {
